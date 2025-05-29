@@ -619,47 +619,48 @@ def polymerize_rw(mol, n, headhead=False, confId=0, tacticity='atactic', atac_ra
     utils.radon_print('Start polymerize_rw.', level=1)
     retry_flag = False
     for i in tqdm(range(n), desc='[Polymerization]', disable=const.tqdm_disable):
+        utils.radon_print(f'Addition of {i+1}/{n} monomer', level=1)
         poly_copy = utils.deepcopy_mol(poly) if poly is not None else None
-
+        
         if chi[i]:
             mol_c = calc.mirror_inversion_mol(mol, confId=confId)
         else:
             mol_c = utils.deepcopy_mol(mol)
 
-        for r in range(retry_step):
+        for r in range(1):
             if headhead and i % 2 == 0:
                 poly = connect_mols(poly, mol_c, tailtail=True, random_rot=True, confId1=confId, confId2=confId)
             else:
                 poly = connect_mols(poly, mol_c, random_rot=True, confId1=confId, confId2=confId)
 
-            if opt == 'lammps' and MD_avail:
-                ff.ff_assign(poly)
-                poly, _ = md.quick_rw(poly, work_dir=work_dir, omp=omp, mpi=mpi, gpu=gpu)
-            elif opt == 'rdkit':
-                AllChem.MMFFOptimizeMolecule(poly, maxIters=50, confId=0)
+            # if opt == 'lammps' and MD_avail:
+                # ff.ff_assign(poly)
+                # poly, _ = md.quick_rw(poly, work_dir=work_dir, omp=omp, mpi=mpi, gpu=gpu)
+            # elif opt == 'rdkit':
+                # AllChem.MMFFOptimizeMolecule(poly, maxIters=50, confId=0)
 
             if i == 0: break
 
-            if check_3d_structure(poly, dist_min=dist_min) and (not check_chi or check_tacticity(poly, tacticity, tac_array=tac_array)):
-                break
-            elif r < retry_step-1:
-                poly = utils.deepcopy_mol(poly_copy) if poly_copy is not None else None
-                utils.radon_print('Retry random walk step %03d' % (i+1))
-            else:
-                retry_flag = True
-                utils.radon_print('Reached maximum number of retrying step in polymerize_rw.', level=1)
+            # if check_3d_structure(poly, dist_min=dist_min) and (not check_chi or check_tacticity(poly, tacticity, tac_array=tac_array)):
+                # break
+            # elif r < retry_step-1:
+                # poly = utils.deepcopy_mol(poly_copy) if poly_copy is not None else None
+                # utils.radon_print('Retry random walk step %03d' % (i+1))
+            # else:
+                # retry_flag = True
+                # utils.radon_print('Reached maximum number of retrying step in polymerize_rw.', level=1)
 
         if retry_flag and retry > 0: break
 
-    if not check_3d_structure(poly, dist_min=dist_min) or (check_chi and not check_tacticity(poly, tacticity, tac_array=tac_array)):
-        if retry <= 0:
-            utils.radon_print('Reached maximum number of retrying polymerize_rw.', level=3)
-        else:
-            utils.radon_print('Retry polymerize_rw.', level=1)
-            retry -= 1
-            poly = polymerize_rw(mol, n, headhead=headhead, confId=confId, tacticity=tacticity,
-                    atac_ratio=atac_ratio, tac_array=tac_array, retry=retry, retry_step=retry_step,
-                    dist_min=dist_min, opt=opt, ff=ff, work_dir=work_dir, omp=omp, mpi=mpi, gpu=gpu)
+    # if not check_3d_structure(poly, dist_min=dist_min) or (check_chi and not check_tacticity(poly, tacticity, tac_array=tac_array)):
+        # if retry <= 0:
+            # utils.radon_print('Reached maximum number of retrying polymerize_rw.', level=3)
+        # else:
+            # utils.radon_print('Retry polymerize_rw.', level=1)
+            # retry -= 1
+            # poly = polymerize_rw(mol, n, headhead=headhead, confId=confId, tacticity=tacticity,
+                    # atac_ratio=atac_ratio, tac_array=tac_array, retry=retry, retry_step=retry_step,
+                    # dist_min=dist_min, opt=opt, ff=ff, work_dir=work_dir, omp=omp, mpi=mpi, gpu=gpu)
 
     return poly
 
@@ -1178,13 +1179,13 @@ def amorphous_cell(mol, n, cell=None, density=0.03, retry=10, retry_step=100, th
 
             if cell_c.GetNumConformers() == 0: break
 
-            if check_3d_structure_cell(cell_c, mol_coord, dist_min=threshold):
-                break
-            elif r < retry_step-1:
-                utils.radon_print('Retry placing replicate in cell')
-            else:
-                retry_flag = True
-                utils.radon_print('Reached maximum number of retrying step in amorphous_cell.', level=1)
+            # if check_3d_structure_cell(cell_c, mol_coord, dist_min=threshold):
+                # break
+            # elif r < retry_step-1:
+                # utils.radon_print('Retry placing replicate in cell')
+            # else:
+                # retry_flag = True
+                # utils.radon_print('Reached maximum number of retrying step in amorphous_cell.', level=1)
 
         if retry_flag and retry > 0: break
 
